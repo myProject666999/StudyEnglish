@@ -21,16 +21,16 @@ public class ArticleController {
     @Autowired
     private ArticleService articleService;
 
-    @GetMapping("/books")
-    public String bookList(@RequestParam(required = false) String keyword,
-                          @RequestParam(required = false) String category,
-                          Model model) {
+    @GetMapping("")
+    public String index(@RequestParam(required = false) String keyword,
+                        @RequestParam(required = false) String category,
+                        Model model) {
         List<Book> books = articleService.findBookList(keyword, category);
         model.addAttribute("books", books);
         model.addAttribute("keyword", keyword);
         model.addAttribute("category", category);
         
-        return "article/book-list";
+        return "articles/list";
     }
 
     @GetMapping("/book/{bookId}")
@@ -40,14 +40,17 @@ public class ArticleController {
         
         model.addAttribute("book", book);
         model.addAttribute("articles", articles);
+        model.addAttribute("bookName", book != null ? book.getTitle() : "");
         
-        return "article/article-list";
+        return "articles/list";
     }
 
     @GetMapping("/read/{id}")
     public String readArticle(@PathVariable Long id,
                               @RequestParam(required = false) Long bookId,
-                              Model model) {
+                              Model model,
+                              HttpSession session) {
+        User user = (User) session.getAttribute("user");
         Article article = articleService.findById(id);
         model.addAttribute("article", article);
         
@@ -56,7 +59,7 @@ public class ArticleController {
             model.addAttribute("book", book);
         }
         
-        return "article/read";
+        return "articles/list";
     }
 
     @PostMapping("/mark-read")

@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
-@RequestMapping("/admin/listening")
+@RequestMapping("/admin/listenings")
 public class AdminListeningController {
 
     @Autowired

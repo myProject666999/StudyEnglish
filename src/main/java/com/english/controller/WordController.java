@@ -22,25 +22,6 @@ public class WordController {
     @Autowired
     private WordService wordService;
 
-    @GetMapping("/levels")
-    public String listLevels(Model model) {
-        List<WordLevel> levels = wordService.findAllLevels();
-        model.addAttribute("levels", levels);
-        return "word/levels";
-    }
-
-    @GetMapping("/level/{levelId}")
-    public String listWordsByLevel(@PathVariable Long levelId, Model model) {
-        List<Word> words = wordService.findByLevelId(levelId);
-        WordLevel level = wordService.findAllLevels().stream()
-                .filter(l -> l.getId().equals(levelId))
-                .findFirst()
-                .orElse(null);
-        model.addAttribute("words", words);
-        model.addAttribute("level", level);
-        return "word/word-list";
-    }
-
     @GetMapping("/learn")
     public String learnPage(@RequestParam(required = false) Long levelId, 
                            @RequestParam(defaultValue = "10") int count,
@@ -59,6 +40,12 @@ public class WordController {
             List<Word> words = wordService.findRandomWords(levelId, count);
             model.addAttribute("words", words);
             model.addAttribute("selectedLevelId", levelId);
+            
+            if (words != null && !words.isEmpty()) {
+                model.addAttribute("word", words.get(0));
+                model.addAttribute("currentIndex", 0);
+                model.addAttribute("totalWords", words.size());
+            }
         }
         
         int newCount = wordService.countNewWords(user.getId());
@@ -66,25 +53,133 @@ public class WordController {
         model.addAttribute("newWordsCount", newCount);
         model.addAttribute("reviewWordsCount", reviewCount);
         
-        return "word/learn";
+        return "words/learn";
     }
 
-    @GetMapping("/new-words")
-    public String newWords(HttpSession session, Model model) {
+    @PostMapping("/learn/{levelId}/next")
+    public String learnNext(@PathVariable Long levelId,
+                            @RequestParam Long wordId,
+                            @RequestParam int currentIndex,
+                            @RequestParam int totalWords,
+                            @RequestParam String action,
+                            HttpSession session) {
         User user = (User) session.getAttribute("user");
-        List<UserWord> newWords = wordService.getNewWords(user.getId(), 20);
-        model.addAttribute("newWords", newWords);
-        model.addAttribute("count", newWords.size());
-        return "word/new-words";
+        
+        if ("vocabulary".equals(action)) {
+            wordService.addToNewWords(user.getId(), wordId);
+        } else if ("known".equals(action)) {
+            wordService.markAsLearned(user.getId(), wordId);
+        }
+        
+        int nextIndex = currentIndex + 1;
+        if (nextIndex < totalWords) {
+            return "redirect:/words/learn/" + levelId + "?index=" + nextIndex;
+        }
+        
+        return "redirect:/words/learn";
     }
 
-    @GetMapping("/review-words")
-    public String reviewWords(HttpSession session, Model model) {
+    @GetMapping("/learn/{levelId}")
+    public String learnWithIndex(@PathVariable Long levelId,
+                                 @RequestParam(required = false, defaultValue = "0") int index,
+                                 @RequestParam(defaultValue = "10") int count,
+                                 Model model,
+                                 HttpSession session) {
         User user = (User) session.getAttribute("user");
+        
+        List<WordLevel> levels = wordService.findAllLevels();
+        model.addAttribute("levels", levels);
+        model.addAttribute("selectedLevelId", levelId);
+        
+        List<Word> words = wordService.findRandomWords(levelId, count);
+        model.addAttribute("words", words);
+        
+        if (words != null && index < words.size()) {
+            model.addAttribute("word", words.get(index));
+            model.addAttribute("currentIndex", index);
+            model.addAttribute("totalWords", words.size());
+        }
+        
+        int newCount = wordService.countNewWords(user.getId());
+        int reviewCount = wordService.countReviewWords(user.getId());
+        model.addAttribute("newWordsCount", newCount);
+        model.addAttribute("reviewWordsCount", reviewCount);
+        
+        return "words/learn";
+    }
+
+    @GetMapping("/review")
+    public String reviewPage(@RequestParam(required = false, defaultValue = "0") int index,
+                             Model model,
+                             HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        
         List<UserWord> reviewWords = wordService.getReviewWords(user.getId(), 20);
-        model.addAttribute("reviewWords", reviewWords);
-        model.addAttribute("count", reviewWords.size());
-        return "word/review-words";
+        model.addAttribute("words", reviewWords);
+        
+        if (reviewWords != null && !reviewWords.isEmpty() && index < reviewWords.size()) {
+            UserWord userWord = reviewWords.get(index);
+            Word word = wordService.findById(userWord.getWordId());
+            model.addAttribute("word", word);
+            model.addAttribute("userWordId", userWord.getId());
+            model.addAttribute("currentIndex", index);
+        }
+        
+        return "words/review";
+    }
+
+    @PostMapping("/review/submit")
+    public String reviewSubmit(@RequestParam(required = false) Long userWordId,
+                               @RequestParam int currentIndex,
+                               @RequestParam int grade,
+                               Model model,
+                               HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        
+        boolean isCorrect = grade >= 3;
+        
+        if (userWordId != null) {
+            List<UserWord> reviewWords = wordService.getReviewWords(user.getId(), 20);
+            if (reviewWords != null && currentIndex < reviewWords.size()) {
+                UserWord userWord = reviewWords.get(currentIndex);
+                wordService.reviewWord(user.getId(), userWord.getWordId(), isCorrect);
+            }
+        }
+        
+        return "redirect:/words/review?index=" + (currentIndex + 1);
+    }
+
+    @GetMapping("/vocabulary")
+    public String vocabularyPage(@RequestParam(required = false) String keyword,
+                                 @RequestParam(required = false, defaultValue = "1") int page,
+                                 @RequestParam(defaultValue = "20") int size,
+                                 Model model,
+                                 HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        
+        List<UserWord> newWords = wordService.getNewWords(user.getId(), size);
+        model.addAttribute("words", newWords);
+        model.addAttribute("totalWords", newWords != null ? newWords.size() : 0);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("currentPage", page);
+        
+        return "words/vocabulary";
+    }
+
+    @GetMapping("/vocabulary/master/{wordId}")
+    public String markAsMastered(@PathVariable Long wordId,
+                                 HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        wordService.markAsMastered(user.getId(), wordId);
+        return "redirect:/words/vocabulary";
+    }
+
+    @GetMapping("/vocabulary/remove/{wordId}")
+    public String removeFromVocabulary(@PathVariable Long wordId,
+                                        HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        wordService.removeFromNewWords(user.getId(), wordId);
+        return "redirect:/words/vocabulary";
     }
 
     @GetMapping("/learned-words")
@@ -93,7 +188,7 @@ public class WordController {
         List<UserWord> learnedWords = wordService.getLearnedWords(user.getId(), 20);
         model.addAttribute("learnedWords", learnedWords);
         model.addAttribute("count", learnedWords.size());
-        return "word/learned-words";
+        return "words/learn";
     }
 
     @GetMapping("/mastered-words")
@@ -102,7 +197,7 @@ public class WordController {
         List<UserWord> masteredWords = wordService.getMasteredWords(user.getId(), 20);
         model.addAttribute("masteredWords", masteredWords);
         model.addAttribute("count", masteredWords.size());
-        return "word/mastered-words";
+        return "words/learn";
     }
 
     @PostMapping("/mark-learned")
@@ -154,27 +249,6 @@ public class WordController {
             UserWord userWord = wordService.addToNewWords(user.getId(), wordId);
             result.put("success", true);
             result.put("message", "已加入生词本");
-        } catch (Exception e) {
-            result.put("success", false);
-            result.put("message", "操作失败: " + e.getMessage());
-        }
-        
-        return result;
-    }
-
-    @PostMapping("/review")
-    @ResponseBody
-    public Map<String, Object> reviewWord(@RequestParam Long wordId,
-                                          @RequestParam boolean isCorrect,
-                                          HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        Map<String, Object> result = new HashMap<>();
-        
-        try {
-            UserWord userWord = wordService.reviewWord(user.getId(), wordId, isCorrect);
-            result.put("success", true);
-            result.put("isMastered", userWord.getIsMastered() == 1);
-            result.put("reviewCount", userWord.getReviewCount());
         } catch (Exception e) {
             result.put("success", false);
             result.put("message", "操作失败: " + e.getMessage());

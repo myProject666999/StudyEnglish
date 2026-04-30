@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
-@RequestMapping("/listening")
+@RequestMapping("/listenings")
 public class ListeningController {
 
     @Autowired
@@ -29,7 +29,7 @@ public class ListeningController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("difficulty", difficulty);
         
-        return "listening/list";
+        return "listenings/list";
     }
 
     @GetMapping("/play/{id}")
@@ -37,10 +37,10 @@ public class ListeningController {
         Listening listening = listeningService.findById(id);
         model.addAttribute("listening", listening);
         
-        return "listening/play";
+        return "listenings/list";
     }
 
-    @PostMapping("/mark-completed")
+    @PostMapping("/mark-complete")
     @ResponseBody
     public Map<String, Object> markAsCompleted(@RequestParam Long listeningId,
                                                  HttpSession session) {
