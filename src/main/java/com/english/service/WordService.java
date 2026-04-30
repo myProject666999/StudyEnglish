@@ -10,6 +10,8 @@ public interface WordService {
 
     Word findById(Long id);
 
+    WordLevel findLevelById(Long id);
+
     List<WordLevel> findAllLevels();
 
     List<Word> findByLevelId(Long levelId);
@@ -23,6 +25,12 @@ public interface WordService {
     boolean updateWord(Word word);
 
     boolean deleteWord(Long id);
+
+    boolean addLevel(WordLevel wordLevel);
+
+    boolean updateLevel(WordLevel wordLevel);
+
+    boolean deleteLevel(Long id);
 
     UserWord startLearning(Long userId, Long wordId);
 

@@ -36,6 +36,11 @@ public class WordServiceImpl implements WordService {
     }
 
     @Override
+    public WordLevel findLevelById(Long id) {
+        return wordLevelMapper.selectById(id);
+    }
+
+    @Override
     public List<WordLevel> findAllLevels() {
         return wordLevelMapper.selectAll();
     }
@@ -68,6 +73,21 @@ public class WordServiceImpl implements WordService {
     @Override
     public boolean deleteWord(Long id) {
         return wordMapper.deleteById(id) > 0;
+    }
+
+    @Override
+    public boolean addLevel(WordLevel wordLevel) {
+        return wordLevelMapper.insert(wordLevel) > 0;
+    }
+
+    @Override
+    public boolean updateLevel(WordLevel wordLevel) {
+        return wordLevelMapper.update(wordLevel) > 0;
+    }
+
+    @Override
+    public boolean deleteLevel(Long id) {
+        return wordLevelMapper.deleteById(id) > 0;
     }
 
     @Override

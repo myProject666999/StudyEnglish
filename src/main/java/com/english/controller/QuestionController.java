@@ -21,6 +21,33 @@ public class QuestionController {
     @Autowired
     private QuestionService questionService;
 
+    @GetMapping("")
+    public String questionList(@RequestParam(required = false) Integer index,
+                               @RequestParam(required = false) Integer questionType,
+                               Model model,
+                               HttpSession session) {
+        if (questionType == null) {
+            questionType = 1;
+        }
+        
+        List<Question> questions = questionService.findRandomQuestions(questionType, 10);
+        model.addAttribute("questions", questions);
+        model.addAttribute("questionType", questionType);
+        model.addAttribute("count", questions.size());
+        
+        if (index == null) {
+            index = 0;
+        }
+        model.addAttribute("currentIndex", index);
+        
+        if (questions != null && !questions.isEmpty() && index < questions.size()) {
+            model.addAttribute("question", questions.get(index));
+            model.addAttribute("totalWords", questions.size());
+        }
+        
+        return "questions/practice";
+    }
+
     @GetMapping("/practice")
     public String practicePage(@RequestParam(required = false) Integer questionType,
                                @RequestParam(defaultValue = "10") int count,
@@ -34,27 +61,40 @@ public class QuestionController {
         model.addAttribute("questionType", questionType);
         model.addAttribute("count", questions.size());
         
-        return "question/practice";
+        return "questions/practice";
+    }
+
+    @GetMapping("/wrong")
+    public String wrongBook(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/login";
+        }
+        
+        List<UserQuestion> wrongQuestions = questionService.getWrongBook(user.getId(), 20);
+        model.addAttribute("wrongQuestions", wrongQuestions);
+        model.addAttribute("totalWrong", wrongQuestions.size());
+        
+        return "questions/wrong";
     }
 
     @GetMapping("/wrong-book")
-    public String wrongBook(HttpSession session, Model model) {
-        User user = (User) session.getAttribute("user");
-        List<UserQuestion> wrongQuestions = questionService.getWrongBook(user.getId(), 20);
-        model.addAttribute("wrongQuestions", wrongQuestions);
-        model.addAttribute("count", wrongQuestions.size());
-        
-        return "question/wrong-book";
+    public String wrongBookLegacy(HttpSession session, Model model) {
+        return wrongBook(session, model);
     }
 
     @GetMapping("/history")
     public String history(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/login";
+        }
+        
         List<UserQuestion> history = questionService.getUserHistory(user.getId(), 20);
         model.addAttribute("history", history);
         model.addAttribute("count", history.size());
         
-        return "question/history";
+        return "questions/practice";
     }
 
     @PostMapping("/submit")
@@ -82,6 +122,44 @@ public class QuestionController {
         return result;
     }
 
+    @PostMapping("/wrong/review")
+    @ResponseBody
+    public Map<String, Object> markAsReviewed(@RequestParam Long userQuestionId,
+                                               HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            questionService.removeFromWrongBook(user.getId(), userQuestionId);
+            result.put("success", true);
+            result.put("message", "已标记为已复习");
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "操作失败: " + e.getMessage());
+        }
+        
+        return result;
+    }
+
+    @PostMapping("/wrong/remove")
+    @ResponseBody
+    public Map<String, Object> removeFromWrongBook(@RequestParam Long userQuestionId,
+                                                    HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            questionService.removeFromWrongBook(user.getId(), userQuestionId);
+            result.put("success", true);
+            result.put("message", "已从错题本移除");
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "操作失败: " + e.getMessage());
+        }
+        
+        return result;
+    }
+
     @PostMapping("/add-wrong-book")
     @ResponseBody
     public Map<String, Object> addToWrongBook(@RequestParam Long questionId,
@@ -103,7 +181,7 @@ public class QuestionController {
 
     @PostMapping("/remove-wrong-book")
     @ResponseBody
-    public Map<String, Object> removeFromWrongBook(@RequestParam Long questionId,
+    public Map<String, Object> removeFromWrongBookLegacy(@RequestParam Long questionId,
                                                     HttpSession session) {
         User user = (User) session.getAttribute("user");
         Map<String, Object> result = new HashMap<>();
@@ -144,8 +222,13 @@ public class QuestionController {
         User user = (User) session.getAttribute("user");
         Map<String, Object> stats = new HashMap<>();
         
-        stats.put("wrongBookCount", questionService.countWrongBook(user.getId()));
-        stats.put("historyCount", questionService.countUserHistory(user.getId()));
+        if (user != null) {
+            stats.put("wrongBookCount", questionService.countWrongBook(user.getId()));
+            stats.put("historyCount", questionService.countUserHistory(user.getId()));
+        } else {
+            stats.put("wrongBookCount", 0);
+            stats.put("historyCount", 0);
+        }
         
         return stats;
     }

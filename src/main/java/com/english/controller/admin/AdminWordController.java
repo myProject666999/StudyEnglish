@@ -53,8 +53,58 @@ public class AdminWordController {
             return result;
         }
         
-        result.put("success", true);
-        result.put("message", "添加成功");
+        boolean success = wordService.addLevel(level);
+        result.put("success", success);
+        result.put("message", success ? "添加成功" : "添加失败");
+        return result;
+    }
+
+    @GetMapping("/levels/edit/{id}")
+    public String editLevelPage(@PathVariable Long id, Model model) {
+        WordLevel level = wordService.findLevelById(id);
+        model.addAttribute("level", level);
+        return "admin/level-edit";
+    }
+
+    @PostMapping("/levels/edit")
+    @ResponseBody
+    public Map<String, Object> editLevel(@RequestParam Long id,
+                                          @RequestParam(required = false) String name,
+                                          @RequestParam(required = false) String description,
+                                          @RequestParam(required = false) Integer sort,
+                                          @RequestParam(required = false) Integer status) {
+        Map<String, Object> result = new HashMap<>();
+        
+        WordLevel level = new WordLevel();
+        level.setId(id);
+        
+        if (name != null) {
+            level.setName(name);
+        }
+        if (description != null) {
+            level.setDescription(description);
+        }
+        if (sort != null) {
+            level.setSort(sort);
+        }
+        if (status != null) {
+            level.setStatus(status);
+        }
+        
+        boolean success = wordService.updateLevel(level);
+        result.put("success", success);
+        result.put("message", success ? "修改成功" : "修改失败");
+        return result;
+    }
+
+    @PostMapping("/levels/delete")
+    @ResponseBody
+    public Map<String, Object> deleteLevel(@RequestParam Long id) {
+        Map<String, Object> result = new HashMap<>();
+        
+        boolean success = wordService.deleteLevel(id);
+        result.put("success", success);
+        result.put("message", success ? "删除成功" : "删除失败");
         return result;
     }
 

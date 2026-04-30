@@ -41,6 +41,10 @@ public class AdminQuestionController {
     @ResponseBody
     public Map<String, Object> addQuestion(@RequestParam Integer questionType,
                                            @RequestParam String question,
+                                           @RequestParam(required = false) String optionA,
+                                           @RequestParam(required = false) String optionB,
+                                           @RequestParam(required = false) String optionC,
+                                           @RequestParam(required = false) String optionD,
                                            @RequestParam(required = false) String options,
                                            @RequestParam String answer,
                                            @RequestParam(required = false) String analysis,
@@ -50,6 +54,10 @@ public class AdminQuestionController {
         Question newQuestion = new Question();
         newQuestion.setQuestionType(questionType);
         newQuestion.setQuestion(question);
+        newQuestion.setOptionA(optionA);
+        newQuestion.setOptionB(optionB);
+        newQuestion.setOptionC(optionC);
+        newQuestion.setOptionD(optionD);
         newQuestion.setOptions(options);
         newQuestion.setAnswer(answer);
         newQuestion.setAnalysis(analysis);
@@ -75,6 +83,10 @@ public class AdminQuestionController {
     public Map<String, Object> editQuestion(@RequestParam Long id,
                                             @RequestParam(required = false) Integer questionType,
                                             @RequestParam(required = false) String question,
+                                            @RequestParam(required = false) String optionA,
+                                            @RequestParam(required = false) String optionB,
+                                            @RequestParam(required = false) String optionC,
+                                            @RequestParam(required = false) String optionD,
                                             @RequestParam(required = false) String options,
                                             @RequestParam(required = false) String answer,
                                             @RequestParam(required = false) String analysis,
@@ -90,6 +102,18 @@ public class AdminQuestionController {
         }
         if (question != null) {
             updateQuestion.setQuestion(question);
+        }
+        if (optionA != null) {
+            updateQuestion.setOptionA(optionA);
+        }
+        if (optionB != null) {
+            updateQuestion.setOptionB(optionB);
+        }
+        if (optionC != null) {
+            updateQuestion.setOptionC(optionC);
+        }
+        if (optionD != null) {
+            updateQuestion.setOptionD(optionD);
         }
         if (options != null) {
             updateQuestion.setOptions(options);
