@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.english.mapper.WordLevelMapper">
+
+    <resultMap id="BaseResultMap" type="com.english.entity.WordLevel">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="sort" property="sort"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, name, description, sort, status, create_time, update_time
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_word_level
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_word_level
+        WHERE status = 1
+        ORDER BY sort ASC
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_word_level
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (name LIKE CONCAT('%', #{keyword}, '%') 
+            OR description LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY sort ASC
+    </select>
+
+    <insert id="insert" parameterType="com.english.entity.WordLevel" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_word_level (name, description, sort, status)
+        VALUES (#{name}, #{description}, #{sort}, #{status})
+    </insert>
+
+    <update id="update" parameterType="com.english.entity.WordLevel">
+        UPDATE t_word_level
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM t_word_level WHERE id = #{id}
+    </delete>
+
+</mapper>

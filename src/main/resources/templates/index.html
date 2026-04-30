@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语学习系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .hero-section {
+            padding: 100px 0;
+        }
+        .feature-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: none;
+            border-radius: 15px;
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .btn-custom {
+            padding: 12px 40px;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-primary-custom:hover {
+            transform: scale(1.05);
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        .quote-box {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/">
+                <i class="bi bi-book-half me-2"></i>英语学习系统
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">登录</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/register">注册</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container hero-section">
+        <div class="row align-items-center">
+            <div class="col-lg-6 text-white">
+                <h1 class="display-4 fw-bold mb-4">开启你的英语学习之旅</h1>
+                <p class="lead mb-5 opacity-90">
+                    专业的英语学习平台，提供单词、阅读、听力全方位训练，
+                    助你轻松掌握英语，开启国际化视野。
+                </p>
+                <div class="d-flex gap-3">
+                    <a href="/register" class="btn btn-custom btn-primary-custom">
+                        立即注册
+                    </a>
+                    <a href="/login" class="btn btn-custom btn-light">
+                        登录系统
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="row g-4">
+                    <div class="col-6">
+                        <div class="card feature-card p-4 text-center">
+                            <i class="bi bi-journal-text text-primary" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3">单词学习</h5>
+                            <p class="text-muted small mb-0">智能记忆，科学复习</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card feature-card p-4 text-center">
+                            <i class="bi bi-book text-success" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3">阅读训练</h5>
+                            <p class="text-muted small mb-0">海量文章，提升阅读</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card feature-card p-4 text-center">
+                            <i class="bi bi-headphones text-info" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3">听力练习</h5>
+                            <p class="text-muted small mb-0">纯正发音，磨耳朵</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card feature-card p-4 text-center">
+                            <i class="bi bi-clipboard-check text-warning" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3">题目练习</h5>
+                            <p class="text-muted small mb-0">查漏补缺，巩固知识</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="quote-box text-center">
+            <i class="bi bi-quote text-primary" style="font-size: 2rem;"></i>
+            <blockquote class="blockquote mt-3">
+                <p class="mb-2" id="quote-content">Practice makes perfect.</p>
+                <p class="mb-0 text-muted" id="quote-cn">熟能生巧。</p>
+                <footer class="blockquote-footer mt-2" id="quote-author">佚名</footer>
+            </blockquote>
+        </div>
+    </div>
+
+    <footer class="bg-white py-4 mt-5">
+        <div class="container text-center text-muted">
+            <p>&copy; 2024 英语学习系统. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        fetch('/quotes/daily')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('quote-content').textContent = data.content;
+                    document.getElementById('quote-cn').textContent = data.contentCn || '';
+                    document.getElementById('quote-author').textContent = data.author || '佚名';
+                }
+            });
+    </script>
+</body>
+</html>

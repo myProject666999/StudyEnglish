@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.english.mapper.UserWordMapper">
+
+    <resultMap id="BaseResultMap" type="com.english.entity.UserWord">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="word_id" property="wordId"/>
+        <result column="is_new" property="isNew"/>
+        <result column="is_learned" property="isLearned"/>
+        <result column="is_mastered" property="isMastered"/>
+        <result column="review_count" property="reviewCount"/>
+        <result column="last_review_time" property="lastReviewTime"/>
+        <result column="next_review_time" property="nextReviewTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <association property="word" javaType="com.english.entity.Word">
+            <id column="word_id" property="id"/>
+            <result column="word" property="word"/>
+            <result column="phonetic" property="phonetic"/>
+            <result column="meaning" property="meaning"/>
+            <result column="example" property="example"/>
+            <result column="example_meaning" property="exampleMeaning"/>
+        </association>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        uw.id, uw.user_id, uw.word_id, uw.is_new, uw.is_learned, uw.is_mastered, 
+        uw.review_count, uw.last_review_time, uw.next_review_time, uw.create_time, uw.update_time,
+        w.word, w.phonetic, w.meaning, w.example, w.example_meaning
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_user_word uw
+        LEFT JOIN t_word w ON uw.word_id = w.id
+        WHERE uw.id = #{id}
+    </select>
+
+    <select id="selectByUserAndWord" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_user_word uw
+        LEFT JOIN t_word w ON uw.word_id = w.id
+        WHERE uw.user_id = #{userId} AND uw.word_id = #{wordId}
+    </select>
+
+    <select id="selectNewWords" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_user_word uw
+        LEFT JOIN t_word w ON uw.word_id = w.id
+        WHERE uw.user_id = #{userId} AND uw.is_new = 1
+        ORDER BY uw.create_time ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectReviewWords" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_user_word uw
+        LEFT JOIN t_word w ON uw.word_id = w.id
+        WHERE uw.user_id = #{userId} 
+        AND uw.is_learned = 1 
+        AND uw.is_mastered = 0
+        AND (uw.next_review_time IS NULL OR uw.next_review_time &lt;= #{now})
+        ORDER BY uw.next_review_time ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectLearnedWords" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_user_word uw
+        LEFT JOIN t_word w ON uw.word_id = w.id
+        WHERE uw.user_id = #{userId} AND uw.is_learned = 1
+        ORDER BY uw.last_review_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectMasteredWords" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_user_word uw
+        LEFT JOIN t_word w ON uw.word_id = w.id
+        WHERE uw.user_id = #{userId} AND uw.is_mastered = 1
+        ORDER BY uw.last_review_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <insert id="insert" parameterType="com.english.entity.UserWord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_user_word (user_id, word_id, is_new, is_learned, is_mastered, 
+                                 review_count, last_review_time, next_review_time)
+        VALUES (#{userId}, #{wordId}, #{isNew}, #{isLearned}, #{isMastered}, 
+                #{reviewCount}, #{lastReviewTime}, #{nextReviewTime})
+    </insert>
+
+    <update id="update" parameterType="com.english.entity.UserWord">
+        UPDATE t_user_word
+        <set>
+            <if test="isNew != null">is_new = #{isNew},</if>
+            <if test="isLearned != null">is_learned = #{isLearned},</if>
+            <if test="isMastered != null">is_mastered = #{isMastered},</if>
+            <if test="reviewCount != null">review_count = #{reviewCount},</if>
+            <if test="lastReviewTime != null">last_review_time = #{lastReviewTime},</if>
+            <if test="nextReviewTime != null">next_review_time = #{nextReviewTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteByUserId">
+        DELETE FROM t_user_word WHERE user_id = #{userId}
+    </delete>
+
+    <select id="countNewWords" resultType="int">
+        SELECT COUNT(*) FROM t_user_word WHERE user_id = #{userId} AND is_new = 1
+    </select>
+
+    <select id="countReviewWords" resultType="int">
+        SELECT COUNT(*) FROM t_user_word 
+        WHERE user_id = #{userId} 
+        AND is_learned = 1 
+        AND is_mastered = 0
+        AND (next_review_time IS NULL OR next_review_time &lt;= #{now})
+    </select>
+
+    <select id="countLearnedWords" resultType="int">
+        SELECT COUNT(*) FROM t_user_word WHERE user_id = #{userId} AND is_learned = 1
+    </select>
+
+    <select id="countMasteredWords" resultType="int">
+        SELECT COUNT(*) FROM t_user_word WHERE user_id = #{userId} AND is_mastered = 1
+    </select>
+
+</mapper>

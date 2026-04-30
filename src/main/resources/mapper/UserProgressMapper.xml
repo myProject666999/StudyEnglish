@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.english.mapper.UserProgressMapper">
+
+    <resultMap id="BaseResultMap" type="com.english.entity.UserProgress">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="total_words" property="totalWords"/>
+        <result column="learned_words" property="learnedWords"/>
+        <result column="mastered_words" property="masteredWords"/>
+        <result column="total_articles" property="totalArticles"/>
+        <result column="read_articles" property="readArticles"/>
+        <result column="total_listenings" property="totalListenings"/>
+        <result column="completed_listenings" property="completedListenings"/>
+        <result column="total_questions" property="totalQuestions"/>
+        <result column="correct_questions" property="correctQuestions"/>
+        <result column="study_days" property="studyDays"/>
+        <result column="continuous_days" property="continuousDays"/>
+        <result column="last_study_date" property="lastStudyDate"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, user_id, total_words, learned_words, mastered_words, total_articles, read_articles, 
+        total_listenings, completed_listenings, total_questions, correct_questions, 
+        study_days, continuous_days, last_study_date, create_time, update_time
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_user_progress
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_user_progress
+        WHERE user_id = #{userId}
+    </select>
+
+    <insert id="insert" parameterType="com.english.entity.UserProgress" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_user_progress (user_id, total_words, learned_words, mastered_words, 
+                                     total_articles, read_articles, total_listenings, completed_listenings,
+                                     total_questions, correct_questions, study_days, continuous_days, last_study_date)
+        VALUES (#{userId}, #{totalWords}, #{learnedWords}, #{masteredWords}, 
+                #{totalArticles}, #{readArticles}, #{totalListenings}, #{completedListenings},
+                #{totalQuestions}, #{correctQuestions}, #{studyDays}, #{continuousDays}, #{lastStudyDate})
+    </insert>
+
+    <update id="update" parameterType="com.english.entity.UserProgress">
+        UPDATE t_user_progress
+        <set>
+            <if test="totalWords != null">total_words = #{totalWords},</if>
+            <if test="learnedWords != null">learned_words = #{learnedWords},</if>
+            <if test="masteredWords != null">mastered_words = #{masteredWords},</if>
+            <if test="totalArticles != null">total_articles = #{totalArticles},</if>
+            <if test="readArticles != null">read_articles = #{readArticles},</if>
+            <if test="totalListenings != null">total_listenings = #{totalListenings},</if>
+            <if test="completedListenings != null">completed_listenings = #{completedListenings},</if>
+            <if test="totalQuestions != null">total_questions = #{totalQuestions},</if>
+            <if test="correctQuestions != null">correct_questions = #{correctQuestions},</if>
+            <if test="studyDays != null">study_days = #{studyDays},</if>
+            <if test="continuousDays != null">continuous_days = #{continuousDays},</if>
+            <if test="lastStudyDate != null">last_study_date = #{lastStudyDate},</if>
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+
+    <delete id="deleteByUserId">
+        DELETE FROM t_user_progress WHERE user_id = #{userId}
+    </delete>
+
+</mapper>

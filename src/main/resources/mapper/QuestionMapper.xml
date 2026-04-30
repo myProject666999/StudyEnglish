@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.english.mapper.QuestionMapper">
+
+    <resultMap id="BaseResultMap" type="com.english.entity.Question">
+        <id column="id" property="id"/>
+        <result column="question_type" property="questionType"/>
+        <result column="question" property="question"/>
+        <result column="options" property="options"/>
+        <result column="answer" property="answer"/>
+        <result column="analysis" property="analysis"/>
+        <result column="difficulty" property="difficulty"/>
+        <result column="word_id" property="wordId"/>
+        <result column="article_id" property="articleId"/>
+        <result column="listening_id" property="listeningId"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, question_type, question, options, answer, analysis, difficulty, word_id, article_id, 
+        listening_id, status, create_time, update_time
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_question
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectByType" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_question
+        WHERE question_type = #{questionType} AND status = 1
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_question
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND question LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="questionType != null">
+            AND question_type = #{questionType}
+        </if>
+        <if test="difficulty != null">
+            AND difficulty = #{difficulty}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectRandom" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_question
+        WHERE status = 1
+        <if test="questionType != null">
+            AND question_type = #{questionType}
+        </if>
+        ORDER BY RAND()
+        LIMIT #{limit}
+    </select>
+
+    <insert id="insert" parameterType="com.english.entity.Question" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_question (question_type, question, options, answer, analysis, difficulty, 
+                                word_id, article_id, listening_id, status)
+        VALUES (#{questionType}, #{question}, #{options}, #{answer}, #{analysis}, #{difficulty}, 
+                #{wordId}, #{articleId}, #{listeningId}, #{status})
+    </insert>
+
+    <update id="update" parameterType="com.english.entity.Question">
+        UPDATE t_question
+        <set>
+            <if test="questionType != null">question_type = #{questionType},</if>
+            <if test="question != null">question = #{question},</if>
+            <if test="options != null">options = #{options},</if>
+            <if test="answer != null">answer = #{answer},</if>
+            <if test="analysis != null">analysis = #{analysis},</if>
+            <if test="difficulty != null">difficulty = #{difficulty},</if>
+            <if test="wordId != null">word_id = #{wordId},</if>
+            <if test="articleId != null">article_id = #{articleId},</if>
+            <if test="listeningId != null">listening_id = #{listeningId},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM t_question WHERE id = #{id}
+    </delete>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM t_question WHERE status = 1
+    </select>
+
+</mapper>

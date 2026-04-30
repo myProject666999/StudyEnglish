@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.english.mapper.ListeningMapper">
+
+    <resultMap id="BaseResultMap" type="com.english.entity.Listening">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="description" property="description"/>
+        <result column="audio_url" property="audioUrl"/>
+        <result column="transcript" property="transcript"/>
+        <result column="translation" property="translation"/>
+        <result column="difficulty" property="difficulty"/>
+        <result column="duration" property="duration"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, title, description, audio_url, transcript, translation, difficulty, duration, status, create_time, update_time
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_listening
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_listening
+        WHERE status = 1
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_listening
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (title LIKE CONCAT('%', #{keyword}, '%') 
+            OR description LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="difficulty != null">
+            AND difficulty = #{difficulty}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="com.english.entity.Listening" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_listening (title, description, audio_url, transcript, translation, difficulty, duration, status)
+        VALUES (#{title}, #{description}, #{audioUrl}, #{transcript}, #{translation}, #{difficulty}, #{duration}, #{status})
+    </insert>
+
+    <update id="update" parameterType="com.english.entity.Listening">
+        UPDATE t_listening
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="audioUrl != null">audio_url = #{audioUrl},</if>
+            <if test="transcript != null">transcript = #{transcript},</if>
+            <if test="translation != null">translation = #{translation},</if>
+            <if test="difficulty != null">difficulty = #{difficulty},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM t_listening WHERE id = #{id}
+    </delete>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM t_listening WHERE status = 1
+    </select>
+
+</mapper>

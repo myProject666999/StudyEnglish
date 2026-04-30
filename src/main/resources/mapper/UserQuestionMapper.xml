@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.english.mapper.UserQuestionMapper">
+
+    <resultMap id="BaseResultMap" type="com.english.entity.UserQuestion">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="question_id" property="questionId"/>
+        <result column="is_correct" property="isCorrect"/>
+        <result column="is_wrong_book" property="isWrongBook"/>
+        <result column="user_answer" property="userAnswer"/>
+        <result column="attempt_count" property="attemptCount"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <association property="question" javaType="com.english.entity.Question">
+            <id column="question_id" property="id"/>
+            <result column="question_type" property="questionType"/>
+            <result column="question" property="question"/>
+            <result column="options" property="options"/>
+            <result column="answer" property="answer"/>
+            <result column="analysis" property="analysis"/>
+            <result column="difficulty" property="difficulty"/>
+        </association>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        uq.id, uq.user_id, uq.question_id, uq.is_correct, uq.is_wrong_book, 
+        uq.user_answer, uq.attempt_count, uq.create_time, uq.update_time,
+        q.question_type, q.question, q.options, q.answer, q.analysis, q.difficulty
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_user_question uq
+        LEFT JOIN t_question q ON uq.question_id = q.id
+        WHERE uq.id = #{id}
+    </select>
+
+    <select id="selectByUserAndQuestion" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_user_question uq
+        LEFT JOIN t_question q ON uq.question_id = q.id
+        WHERE uq.user_id = #{userId} AND uq.question_id = #{questionId}
+    </select>
+
+    <select id="selectWrongBook" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_user_question uq
+        LEFT JOIN t_question q ON uq.question_id = q.id
+        WHERE uq.user_id = #{userId} AND uq.is_wrong_book = 1
+        ORDER BY uq.update_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_user_question uq
+        LEFT JOIN t_question q ON uq.question_id = q.id
+        WHERE uq.user_id = #{userId}
+        ORDER BY uq.create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <insert id="insert" parameterType="com.english.entity.UserQuestion" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_user_question (user_id, question_id, is_correct, is_wrong_book, user_answer, attempt_count)
+        VALUES (#{userId}, #{questionId}, #{isCorrect}, #{isWrongBook}, #{userAnswer}, #{attemptCount})
+    </insert>
+
+    <update id="update" parameterType="com.english.entity.UserQuestion">
+        UPDATE t_user_question
+        <set>
+            <if test="isCorrect != null">is_correct = #{isCorrect},</if>
+            <if test="isWrongBook != null">is_wrong_book = #{isWrongBook},</if>
+            <if test="userAnswer != null">user_answer = #{userAnswer},</if>
+            <if test="attemptCount != null">attempt_count = #{attemptCount},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteByUserId">
+        DELETE FROM t_user_question WHERE user_id = #{userId}
+    </delete>
+
+    <delete id="deleteWrongBook">
+        DELETE FROM t_user_question WHERE user_id = #{userId} AND is_wrong_book = 1
+    </delete>
+
+    <select id="countWrongBook" resultType="int">
+        SELECT COUNT(*) FROM t_user_question WHERE user_id = #{userId} AND is_wrong_book = 1
+    </select>
+
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM t_user_question WHERE user_id = #{userId}
+    </select>
+
+</mapper>

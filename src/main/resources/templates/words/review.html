@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单词复习 - 英语学习系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: fixed;
+            width: 250px;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 15px 20px;
+            border-radius: 0;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.15);
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .navbar-top {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-left: 250px;
+        }
+        .word-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .word-card:hover {
+            transform: translateY(-5px);
+        }
+        .word-text {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .word-phonetic {
+            font-size: 1.2rem;
+            color: #666;
+        }
+        .word-meaning {
+            font-size: 1.5rem;
+            color: #667eea;
+            display: none;
+        }
+        .word-example {
+            font-size: 1rem;
+            color: #888;
+            font-style: italic;
+            display: none;
+        }
+        .action-btn {
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-again {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            color: white;
+        }
+        .btn-hard {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            border: none;
+            color: white;
+        }
+        .btn-good {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border: none;
+            color: white;
+        }
+        .btn-easy {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border: none;
+            color: white;
+        }
+        .review-info {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="p-4">
+            <h4 class="text-white mb-4">
+                <i class="bi bi-book-half me-2"></i>英语学习
+            </h4>
+        </div>
+        <nav class="nav flex-column">
+            <a class="nav-link" href="/home">
+                <i class="bi bi-house-door"></i>首页
+            </a>
+            <a class="nav-link" href="/words/learn">
+                <i class="bi bi-journal-text"></i>单词学习
+            </a>
+            <a class="nav-link active" href="/words/review">
+                <i class="bi bi-arrow-repeat"></i>单词复习
+            </a>
+            <a class="nav-link" href="/words/vocabulary">
+                <i class="bi bi-bookmark-heart"></i>生词本
+            </a>
+            <a class="nav-link" href="/articles">
+                <i class="bi bi-book"></i>阅读练习
+            </a>
+            <a class="nav-link" href="/listenings">
+                <i class="bi bi-headphones"></i>听力练习
+            </a>
+            <a class="nav-link" href="/questions">
+                <i class="bi bi-clipboard-check"></i>题目练习
+            </a>
+            <a class="nav-link" href="/questions/wrong">
+                <i class="bi bi-x-circle"></i>错题本
+            </a>
+            <a class="nav-link" href="/progress">
+                <i class="bi bi-graph-up"></i>学习进度
+            </a>
+        </nav>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-top">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center">
+                <h5 class="mb-0">单词复习</h5>
+            </div>
+            <div class="collapse navbar-collapse justify-content-end">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>
+                            <span th:text="${session.user.nickname != null ? session.user.nickname : session.user.username}">用户</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/profile"><i class="bi bi-person me-2"></i>个人资料</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>退出登录</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div th:if="${words != null and #lists.size(words) > 0}">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="review-info mb-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">
+                                <i class="bi bi-arrow-repeat text-primary me-2"></i>
+                                待复习单词：<span class="text-primary fw-bold" th:text="${#lists.size(words)}">0</span> 个
+                            </h6>
+                            <small class="text-muted">根据艾宾浩斯遗忘曲线智能安排复习</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="small text-muted">当前</div>
+                            <div class="fw-bold text-primary">
+                                <span th:text="${currentIndex + 1}">1</span> / <span th:text="${#lists.size(words)}">10</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="word-card p-5 text-center" id="wordCard" onclick="toggleMeaning()">
+                        <div class="word-text mb-3" th:text="${word.word}">abandon</div>
+                        <div class="word-phonetic mb-4" th:if="${word.phonetic != null}" th:text="${word.phonetic}">[əˈbændən]</div>
+                        <div class="word-meaning mb-3" id="meaning" th:text="${word.meaning}">v. 放弃；抛弃</div>
+                        <div class="word-example" id="example" th:if="${word.example != null}" th:text="${word.example}">He abandoned his plan.</div>
+                        <div class="mt-4">
+                            <small class="text-muted" id="hint">点击卡片显示释义</small>
+                        </div>
+                    </div>
+
+                    <form th:action="@{/words/review/submit}" method="post" id="reviewForm">
+                        <input type="hidden" name="userWordId" th:value="${userWordId}">
+                        <input type="hidden" name="currentIndex" th:value="${currentIndex}">
+                        <input type="hidden" name="grade" id="gradeInput" value="4">
+
+                        <div class="d-flex justify-content-center gap-3 mt-4">
+                            <button type="button" class="btn action-btn btn-again" onclick="submitGrade(1)">
+                                <i class="bi bi-emoji-dizzy me-2"></i>再看一次
+                            </button>
+                            <button type="button" class="btn action-btn btn-hard" onclick="submitGrade(2)">
+                                <i class="bi bi-emoji-frown me-2"></i>困难
+                            </button>
+                            <button type="button" class="btn action-btn btn-good" onclick="submitGrade(3)">
+                                <i class="bi bi-emoji-smile me-2"></i>一般
+                            </button>
+                            <button type="button" class="btn action-btn btn-easy" onclick="submitGrade(4)">
+                                <i class="bi bi-emoji-laughing me-2"></i>简单
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${words == null or #lists.size(words) == 0}" class="text-center py-5">
+            <i class="bi bi-emoji-smile text-success" style="font-size: 4rem;"></i>
+            <h4 class="mt-4">太棒了！今日复习任务已完成</h4>
+            <p class="text-muted">没有需要复习的单词了，可以继续学习新单词</p>
+            <div class="mt-4">
+                <a href="/words/learn" class="btn btn-primary action-btn">
+                    <i class="bi bi-journal-text me-2"></i>学习新单词
+                </a>
+                <a href="/home" class="btn btn-secondary action-btn">
+                    <i class="bi bi-house-door me-2"></i>返回首页
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleMeaning() {
+            var meaning = document.getElementById('meaning');
+            var example = document.getElementById('example');
+            var hint = document.getElementById('hint');
+            
+            if (meaning.style.display === 'none' || meaning.style.display === '') {
+                meaning.style.display = 'block';
+                if (example) example.style.display = 'block';
+                hint.textContent = '已显示释义，选择掌握程度';
+            } else {
+                meaning.style.display = 'none';
+                if (example) example.style.display = 'none';
+                hint.textContent = '点击卡片显示释义';
+            }
+        }
+
+        function submitGrade(grade) {
+            document.getElementById('gradeInput').value = grade;
+            document.getElementById('reviewForm').submit();
+        }
+    </script>
+</body>
+</html>

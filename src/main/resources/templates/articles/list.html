@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阅读练习 - 英语学习系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: fixed;
+            width: 250px;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 15px 20px;
+            border-radius: 0;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.15);
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .navbar-top {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-left: 250px;
+        }
+        .book-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .book-cover {
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+        }
+        .article-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .article-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .article-card.completed {
+            border-left: 4px solid #198754;
+        }
+        .article-card .status-badge {
+            font-size: 0.75rem;
+        }
+        .reading-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            line-height: 2;
+            font-size: 1.1rem;
+        }
+        .reading-content p {
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+        .reading-header {
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .vocabulary-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .vocabulary-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .vocabulary-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="p-4">
+            <h4 class="text-white mb-4">
+                <i class="bi bi-book-half me-2"></i>英语学习
+            </h4>
+        </div>
+        <nav class="nav flex-column">
+            <a class="nav-link" href="/home">
+                <i class="bi bi-house-door"></i>首页
+            </a>
+            <a class="nav-link" href="/words/learn">
+                <i class="bi bi-journal-text"></i>单词学习
+            </a>
+            <a class="nav-link" href="/words/review">
+                <i class="bi bi-arrow-repeat"></i>单词复习
+            </a>
+            <a class="nav-link" href="/words/vocabulary">
+                <i class="bi bi-bookmark-heart"></i>生词本
+            </a>
+            <a class="nav-link active" href="/articles">
+                <i class="bi bi-book"></i>阅读练习
+            </a>
+            <a class="nav-link" href="/listenings">
+                <i class="bi bi-headphones"></i>听力练习
+            </a>
+            <a class="nav-link" href="/questions">
+                <i class="bi bi-clipboard-check"></i>题目练习
+            </a>
+            <a class="nav-link" href="/questions/wrong">
+                <i class="bi bi-x-circle"></i>错题本
+            </a>
+            <a class="nav-link" href="/progress">
+                <i class="bi bi-graph-up"></i>学习进度
+            </a>
+        </nav>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-top">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center">
+                <h5 class="mb-0">阅读练习</h5>
+            </div>
+            <div class="collapse navbar-collapse justify-content-end">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>
+                            <span th:text="${session.user.nickname != null ? session.user.nickname : session.user.username}">用户</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/profile"><i class="bi bi-person me-2"></i>个人资料</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>退出登录</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div th:if="${books != null and #lists.size(books) > 0}">
+            <div class="mb-4">
+                <a th:if="${articles != null}" href="/articles" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-1"></i>返回书籍列表
+                </a>
+            </div>
+            
+            <h4 class="mb-4" th:if="${articles == null}">选择阅读书籍</h4>
+            <h4 class="mb-4" th:if="${articles != null}" th:text="${bookName + ' - 文章列表'}">文章列表</h4>
+
+            <div th:if="${articles == null}" class="row g-4">
+                <div class="col-md-3" th:each="book : ${books}">
+                    <a th:href="@{/articles/book/{bookId}(bookId=${book.id})}" class="text-decoration-none">
+                        <div class="book-card">
+                            <div class="book-cover">
+                                <i class="bi bi-book"></i>
+                            </div>
+                            <div class="p-3">
+                                <h6 class="mb-1 text-dark" th:text="${book.title}">新概念英语</h6>
+                                <p class="text-muted small mb-1" th:text="${book.author}">L.G.Alexander</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-primary" th:text="${book.articleCount != null ? book.articleCount + ' 篇' : ''}">10篇</span>
+                                    <small class="text-muted" th:text="${book.readCount != null ? '已读 ' + book.readCount : '已读 0'}">已读 0</small>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div th:if="${articles != null and #lists.size(articles) > 0}">
+                <div th:each="article : ${articles}">
+                    <a th:href="@{/articles/read/{id}(id=${article.id})}" class="text-decoration-none">
+                        <div class="article-card d-flex justify-content-between align-items-start" th:classappend="${article.isRead} ? 'completed' : ''">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <h6 class="mb-0 text-dark" th:text="${article.title}">Lesson 1: A Private Conversation</h6>
+                                    <span class="badge status-badge ms-2" th:classappend="${article.isRead} ? 'bg-success' : 'bg-secondary'" 
+                                          th:text="${article.isRead} ? '已读' : '未读'">未读</span>
+                                </div>
+                                <p class="text-muted mb-0 small" th:text="${article.description != null ? article.description : ''}">私人谈话</p>
+                                <div class="mt-2">
+                                    <span class="badge bg-light text-dark me-2" th:text="'难度: ' + (article.difficulty != null ? article.difficulty : '初级')">难度: 初级</span>
+                                    <span class="text-muted small" th:text="${article.wordCount != null ? article.wordCount + ' 词' : ''}">200词</span>
+                                </div>
+                            </div>
+                            <div>
+                                <i class="bi bi-chevron-right text-muted"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div th:if="${articles != null and #lists.size(articles) == 0}" class="text-center py-5">
+                <i class="bi bi-book text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-3 text-muted">暂无文章</h5>
+            </div>
+        </div>
+
+        <div th:if="${article != null}">
+            <div class="mb-4">
+                <a th:href="@{/articles/book/{bookId}(bookId=${article.bookId})}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-1"></i>返回文章列表
+                </a>
+            </div>
+
+            <div class="reading-content">
+                <div class="reading-header">
+                    <h3 class="mb-2" th:text="${article.title}">Lesson 1: A Private Conversation</h3>
+                    <div class="d-flex gap-3">
+                        <span class="badge bg-secondary" th:text="${article.difficulty != null ? article.difficulty : '初级'}">初级</span>
+                        <span class="text-muted" th:text="${article.wordCount != null ? article.wordCount + ' 词' : ''}">200词</span>
+                    </div>
+                </div>
+
+                <div th:utext="${article.content}">
+                    <p>Last week I went to the theatre. I had a very good seat. The play was very interesting. I did not enjoy it. A young man and a young woman were sitting behind me. They were talking loudly. I got very angry. I could not hear the actors. I turned round. I looked at the man and the woman angrily. They did not pay any attention.</p>
+                    <p>In the end, I could not bear it. I turned round again. 'I can't hear a word!' I said angrily. 'It's none of your business,' the young man said rudely. 'This is a private conversation!'</p>
+                </div>
+
+                <div th:if="${article.vocabulary != null}" class="vocabulary-box">
+                    <h6 class="mb-3"><i class="bi bi-journal-text text-primary me-2"></i>重点词汇</h6>
+                    <div th:each="vocab : ${#strings.arraySplit(article.vocabulary, '\n')}" th:if="${vocab != ''}" class="vocabulary-item">
+                        <span th:text="${vocab}">private adj. 私人的</span>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-center">
+                    <form th:action="@{/articles/mark-read}" method="post">
+                        <input type="hidden" name="articleId" th:value="${article.id}">
+                        <button type="submit" class="btn btn-primary" th:if="${!isRead}">
+                            <i class="bi bi-check-circle me-2"></i>标记已读
+                        </button>
+                        <span class="text-success" th:if="${isRead}">
+                            <i class="bi bi-check-circle-fill me-2"></i>已完成阅读
+                        </span>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${books == null and article == null}" class="text-center py-5">
+            <i class="bi bi-book text-muted" style="font-size: 4rem;"></i>
+            <h4 class="mt-4">暂无阅读材料</h4>
+            <p class="text-muted">系统中暂时没有可用的阅读材料</p>
+            <div class="mt-4">
+                <a href="/home" class="btn btn-primary">
+                    <i class="bi bi-house-door me-2"></i>返回首页
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

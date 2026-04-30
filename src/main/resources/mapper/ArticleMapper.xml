@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.english.mapper.ArticleMapper">
+
+    <resultMap id="BaseResultMap" type="com.english.entity.Article">
+        <id column="id" property="id"/>
+        <result column="book_id" property="bookId"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="translation" property="translation"/>
+        <result column="difficulty" property="difficulty"/>
+        <result column="word_count" property="wordCount"/>
+        <result column="audio_url" property="audioUrl"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="book_title" property="bookTitle"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        a.id, a.book_id, a.title, a.content, a.translation, a.difficulty, a.word_count, 
+        a.audio_url, a.status, a.create_time, a.update_time, b.title AS book_title
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_article a
+        LEFT JOIN t_book b ON a.book_id = b.id
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="selectByBookId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_article a
+        LEFT JOIN t_book b ON a.book_id = b.id
+        WHERE a.book_id = #{bookId} AND a.status = 1
+        ORDER BY a.create_time ASC
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM t_article a
+        LEFT JOIN t_book b ON a.book_id = b.id
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (a.title LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="bookId != null">
+            AND a.book_id = #{bookId}
+        </if>
+        <if test="difficulty != null">
+            AND a.difficulty = #{difficulty}
+        </if>
+        ORDER BY a.create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="com.english.entity.Article" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_article (book_id, title, content, translation, difficulty, word_count, audio_url, status)
+        VALUES (#{bookId}, #{title}, #{content}, #{translation}, #{difficulty}, #{wordCount}, #{audioUrl}, #{status})
+    </insert>
+
+    <update id="update" parameterType="com.english.entity.Article">
+        UPDATE t_article
+        <set>
+            <if test="bookId != null">book_id = #{bookId},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="translation != null">translation = #{translation},</if>
+            <if test="difficulty != null">difficulty = #{difficulty},</if>
+            <if test="wordCount != null">word_count = #{wordCount},</if>
+            <if test="audioUrl != null">audio_url = #{audioUrl},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM t_article WHERE id = #{id}
+    </delete>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM t_article WHERE status = 1
+    </select>
+
+</mapper>
